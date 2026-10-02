@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIMULASI CAT POLRI - Real-Time Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .font-tech { font-family: 'Chakra Petch', monospace; }
+        .no-select { user-select: none; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-amber-500 selection:text-slate-950">
+
+    <!-- HEADER -->
+    <header class="bg-slate-900 border-b border-amber-500/20 px-4 py-3.5 flex justify-between items-center shadow-2xl sticky top-0 z-40">
+        <div class="flex items-center space-x-3">
+            <div class="bg-amber-500 text-slate-950 p-2.5 rounded-2xl font-black shadow-lg shadow-amber-500/20">
+                <i class="fa-solid fa-bolt text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-black text-base sm:text-lg leading-none text-amber-400 tracking-wide font-tech">SIMULASI CAT KECERMATAN POLRI</h1>
+                <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Engine Evaluasi Indikator Performa Latihan</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <div id="userStatusBadge" class="hidden items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-full text-xs font-bold text-slate-300">
+                <i class="fa-solid fa-user text-amber-400"></i>
+                <span id="userNameDisplay">User</span>
+                <span id="vipBadge" class="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full text-[10px] font-black uppercase">Trial</span>
+                <span id="subRemainingDisplay" class="text-[10px] text-amber-300 font-mono hidden"></span>
+            </div>
+
+            <button id="btnHistoryHeader" onclick="openHistoryModal()" class="hidden bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-3.5 py-1.5 rounded-xl font-bold text-xs transition flex items-center gap-1.5">
+                <i class="fa-solid fa-clock-rotate-left"></i> Riwayat
+            </button>
+
+            <button id="btnSubscribeHeader" onclick="openModal('modalSubscribe')" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 px-3.5 py-1.5 rounded-xl font-extrabold text-xs shadow-lg transition flex items-center gap-1.5">
+                <i class="fa-solid fa-crown"></i> Berlangganan
+            </button>
+
+            <button id="btnAuthHeader" onclick="openModal('modalAuth')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-3.5 py-1.5 rounded-xl font-bold text-xs transition">
+                <i class="fa-solid fa-right-to-bracket mr-1"></i> Masuk / Daftar
+            </button>
+            <button id="btnLogoutHeader" onclick="logout()" class="hidden bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl font-bold text-xs transition">
+                <i class="fa-solid fa-power-off"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+
+        <!-- PANEL SETUP -->
+        <div id="panelSetup" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+            <div class="border-b border-slate-800 pb-5 mb-6 flex justify-between items-start">
+                <div>
+                    <span class="text-xs font-bold text-amber-400 tracking-widest uppercase block mb-1">Konfigurasi Simulasi</span>
+                    <h2 class="text-2xl font-extrabold text-white">Tes Kecermatan (Angka / Huruf / Simbol Hilang)</h2>
+                </div>
+                <div id="bannerUserStatusPanel" class="text-right hidden">
+                    <span class="text-[10px] uppercase text-slate-400 block font-bold">Status Akun</span>
+                    <span id="panelStatusText" class="text-xs font-extrabold text-amber-400">TRIAL</span>
+                </div>
+            </div>
+
+            <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 mb-6 flex items-start gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-amber-400 text-xl mt-0.5"></i>
+                <div class="text-xs text-slate-300 leading-relaxed">
+                    <strong class="text-amber-400 block mb-0.5">PERNYATAAN PENTING:</strong>
+                    Sistem ini memberikan <strong>“Indikator Performa Latihan”</strong> secara statistik berdasarkan kecepatan, ketelitian, dan konsistensi. Modul ini <strong>TIDAK memberikan diagnosis psikologis klinis</strong> dan <strong>TIDAK menyatakan kelulusan resmi CAT Polri</strong>.
+                </div>
+            </div>
+
+            <div class="mb-6 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <label class="block text-xs font-bold text-amber-400 uppercase mb-3">Pilih Mode Ujian</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label class="relative flex items-center p-4 rounded-xl border border-slate-800 bg-slate-900 cursor-pointer hover:border-amber-500/50 transition">
+                        <input type="radio" name="modeSimulasi" value="trial" checked class="text-amber-500 focus:ring-amber-500">
+                        <div class="ml-3">
+                            <span class="block text-sm font-bold text-white">Mode Trial (Gratis)</span>
+                            <span class="block text-xs text-slate-400">2 Kolom Soal • Evaluasi Cepat</span>
+                        </div>
+                    </label>
+
+                    <label class="relative flex items-center p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 cursor-pointer hover:border-amber-500 transition">
+                        <input type="radio" name="modeSimulasi" value="full" class="text-amber-500 focus:ring-amber-500">
+                        <div class="ml-3">
+                            <div class="flex items-center gap-2">
+                                <span class="block text-sm font-bold text-amber-400">Simulasi Ujian Penuh</span>
+                                <span class="bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded">VIP</span>
+                            </div>
+                            <span class="block text-xs text-slate-400">10 Kolom Soal Standar CAT Polri Lengkap</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                    <label class="block text-xs font-bold text-amber-400 uppercase mb-2">Tipe Karakter Hilang</label>
+                    <select id="selectCategory" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-amber-500">
+                        <option value="huruf">Huruf Hilang (A - Z)</option>
+                        <option value="angka">Angka Hilang (1 - 9)</option>
+                        <option value="simbol">Simbol Hilang (@, #, $, %, &)</option>
+                    </select>
+                </div>
+
+                <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                    <label class="block text-xs font-bold text-amber-400 uppercase mb-2">Soal Per Kolom</label>
+                    <select id="selectItemCount" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-amber-500">
+                        <option value="30">30 Soal / Kolom (Latihan Cepat)</option>
+                        <option value="40" selected>40 Soal / Kolom (Standar Tes)</option>
+                        <option value="50">50 Soal / Kolom (Pro)</option>
+                    </select>
+                </div>
+
+                <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+                    <label class="block text-xs font-bold text-amber-400 uppercase mb-2">Durasi Per Kolom</label>
+                    <select id="selectTimer" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-amber-500">
+                        <option value="60" selected>60 Detik / Kolom (Standar)</option>
+                        <option value="90">90 Detik / Kolom</option>
+                        <option value="120">120 Detik / Kolom</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center border-t border-slate-800 pt-6">
+                <span class="text-xs text-slate-400"><i class="fa-solid fa-keyboard mr-1"></i> Kontrol Jawaban: Gunakan Keyboard <strong>A, B, C, D, E</strong> atau angka <strong>1, 2, 3, 4, 5</strong></span>
+                <button onclick="checkAndStartExam()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-8 py-3.5 rounded-2xl shadow-xl shadow-amber-500/20 text-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-play"></i> MULAI SIMULASI
+                </button>
+            </div>
+        </div>
+
+        <!-- PANEL INTERMISSION -->
+        <div id="panelIntermission" class="hidden bg-slate-900 border border-amber-500/30 rounded-3xl p-8 shadow-2xl text-center space-y-4">
+            <div class="w-16 h-16 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto text-2xl font-black font-tech animate-bounce">
+                <i class="fa-solid fa-arrow-right-long"></i>
+            </div>
+            <h3 class="text-2xl font-black text-white">KOLOM <span id="intermissionPrevCol">1</span> SELESAI!</h3>
+            <p class="text-sm text-slate-300">Bersiaplah, Kolom <span id="intermissionNextCol">2</span> akan segera dimulai...</p>
+            <div class="text-4xl font-black font-tech text-amber-400" id="intermissionCountdown">3</div>
+        </div>
+
+        <!-- PANEL EXAM -->
+        <div id="panelExam" class="hidden bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl no-select">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span id="displayColumnBadge" class="bg-amber-500 text-slate-950 font-black text-[11px] px-2.5 py-0.5 rounded-md uppercase font-tech">KOLOM 1 / 2</span>
+                        <span class="text-xs font-extrabold text-amber-400 font-tech uppercase tracking-wider">SIMULASI BERJALAN</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Tes Kecermatan Karakter Hilang</h3>
+                </div>
+                <div class="bg-slate-950 border border-slate-800 px-4 py-2 rounded-2xl flex items-center gap-3">
+                    <i class="fa-solid fa-stopwatch text-amber-400 text-xl animate-pulse"></i>
+                    <span id="displayTimer" class="font-tech text-2xl font-black text-amber-400">00:00</span>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 mb-6 text-center">
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-3">Tabel Pasangan Kunci Acuan</span>
+                <div id="keyGrid" class="grid grid-cols-5 gap-3 max-w-xl mx-auto"></div>
+            </div>
+
+            <div class="bg-slate-950 border-2 border-amber-500/30 rounded-2xl p-6 mb-6 text-center shadow-inner">
+                <span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">SOAL NOMOR <span id="currentQuestionNum" class="text-amber-400">1</span> DARI <span id="totalQuestionNum">40</span></span>
+                <div id="questionDisplay" class="font-tech text-4xl sm:text-5xl font-black tracking-[0.2em] text-amber-300 my-3">- - - -</div>
+                <p class="text-xs text-slate-400">Pilih huruf/karakter yang <strong>HILANG / TIDAK ADA</strong> pada soal di atas!</p>
+            </div>
+
+            <div id="answerButtons" class="grid grid-cols-5 gap-3 max-w-xl mx-auto">
+                <button onclick="submitAnswer('A')" class="bg-slate-800 hover:bg-amber-500 hover:text-slate-950 border border-slate-700 text-white font-black py-4 rounded-2xl text-xl transition active:scale-95">A</button>
+                <button onclick="submitAnswer('B')" class="bg-slate-800 hover:bg-amber-500 hover:text-slate-950 border border-slate-700 text-white font-black py-4 rounded-2xl text-xl transition active:scale-95">B</button>
+                <button onclick="submitAnswer('C')" class="bg-slate-800 hover:bg-amber-500 hover:text-slate-950 border border-slate-700 text-white font-black py-4 rounded-2xl text-xl transition active:scale-95">C</button>
+                <button onclick="submitAnswer('D')" class="bg-slate-800 hover:bg-amber-500 hover:text-slate-950 border border-slate-700 text-white font-black py-4 rounded-2xl text-xl transition active:scale-95">D</button>
+                <button onclick="submitAnswer('E')" class="bg-slate-800 hover:bg-amber-500 hover:text-slate-950 border border-slate-700 text-white font-black py-4 rounded-2xl text-xl transition active:scale-95">E</button>
+            </div>
+        </div>
+
+        <!-- PANEL RESULT -->
+        <div id="panelResult" class="hidden space-y-6">
+            <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-6 rounded-3xl">
+                <div>
+                    <span class="text-xs text-amber-400 font-bold uppercase block mb-1">Hasil & Evaluation Report</span>
+                    <h2 class="text-2xl font-extrabold text-white">Laporan Indikator Performa Latihan (<span id="resTotalCols">2</span> Kolom)</h2>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="openHistoryModal()" class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 text-xs px-4 py-3 rounded-2xl font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Lihat Riwayat Akun
+                    </button>
+                    <button onclick="location.reload()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs px-5 py-3 rounded-2xl font-black transition shadow-lg shadow-amber-500/20">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> Latihan Ulang
+                    </button>
+                </div>
+            </div>
+
+            <div id="trialPromoBanner" class="hidden bg-gradient-to-r from-amber-500/20 via-slate-900 to-amber-500/10 border border-amber-500/40 p-5 rounded-3xl justify-between items-center">
+                <div>
+                    <span class="text-xs font-black text-amber-400 uppercase tracking-wide">💡 Ingin Menguji Ketahanan 10 Kolom Penuh?</span>
+                    <p class="text-xs text-slate-300 mt-0.5">Ujian CAT Polri sesungguhnya terdiri dari 10 kolom berturut-turut. Tingkatkan akun Anda ke VIP untuk membuka simulasi penuh.</p>
+                </div>
+                <button onclick="openModal('modalSubscribe')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs whitespace-nowrap shadow-lg">
+                    Upgrade ke VIP
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl text-center">
+                    <span class="text-xs font-bold text-slate-400 uppercase">Skor Performa Latihan</span>
+                    <div id="resCompositeScore" class="text-5xl font-black text-amber-400 font-tech my-2">0</div>
+                    <span class="text-[10px] text-slate-500">Komposit Transparan (0–100)</span>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col justify-center">
+                    <span class="text-xs font-bold text-slate-400 uppercase mb-1">Kategori Hasil</span>
+                    <div id="resCategoryResult" class="text-lg font-black text-emerald-400">Sangat Konsisten</div>
+                    <p class="text-[11px] text-slate-400 mt-1">Berdasarkan threshold evaluasi latihan.</p>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col justify-center">
+                    <span class="text-xs font-bold text-slate-400 uppercase mb-1">Speed–Accuracy Trade-Off</span>
+                    <div id="resTradeOff" class="text-base font-bold text-amber-300">A. Cepat + akurat</div>
+                    <p class="text-[11px] text-slate-400 mt-1">Korelasi antara kecepatan dan akurasi.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-3">
+                    <h3 class="text-xs font-black text-amber-400 uppercase border-b border-slate-800 pb-2"><i class="fa-solid fa-chart-pie mr-2"></i> B. Statistik Utama</h3>
+                    <div class="text-xs space-y-2">
+                        <div class="flex justify-between"><span>Total Soal:</span><span id="statTotal" class="font-bold">0</span></div>
+                        <div class="flex justify-between"><span>Total Dijawab:</span><span id="statAnswered" class="font-bold">0</span></div>
+                        <div class="flex justify-between text-emerald-400"><span>Total Benar:</span><span id="statCorrect" class="font-bold">0</span></div>
+                        <div class="flex justify-between text-rose-400"><span>Total Salah:</span><span id="statWrong" class="font-bold">0</span></div>
+                        <div class="flex justify-between text-slate-400"><span>Tidak Dijawab:</span><span id="statUnanswered" class="font-bold">0</span></div>
+                        <div class="flex justify-between border-t border-slate-800 pt-2 text-amber-400 font-bold"><span>Akurasi:</span><span id="statAccuracy">0%</span></div>
+                        <div class="flex justify-between font-bold"><span>Tingkat Penyelesaian:</span><span id="statCompletion">0%</span></div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-3">
+                    <h3 class="text-xs font-black text-amber-400 uppercase border-b border-slate-800 pb-2"><i class="fa-solid fa-gauge-high mr-2"></i> C. Kecepatan</h3>
+                    <div class="text-xs space-y-2">
+                        <div class="flex justify-between"><span>Rata-rata Waktu / Soal:</span><span id="spAvg" class="font-bold">0s</span></div>
+                        <div class="flex justify-between text-amber-300"><span>Median Waktu:</span><span id="spMedian" class="font-bold">0s</span></div>
+                        <div class="flex justify-between"><span>Waktu Tercepat:</span><span id="spFastest" class="font-bold">0s</span></div>
+                        <div class="flex justify-between"><span>Waktu Terlambat:</span><span id="spSlowest" class="font-bold">0s</span></div>
+                        <div class="flex justify-between"><span>Soal / Menit:</span><span id="spQpm" class="font-bold">0</span></div>
+                        <div class="flex justify-between border-t border-slate-800 pt-2 text-emerald-400"><span>Rata Soal Benar:</span><span id="spAvgCorrect">0s</span></div>
+                        <div class="flex justify-between text-rose-400"><span>Rata Soal Salah:</span><span id="spAvgWrong">0s</span></div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-3">
+                    <h3 class="text-xs font-black text-amber-400 uppercase border-b border-slate-800 pb-2"><i class="fa-solid fa-bullseye mr-2"></i> D. Ketelitian</h3>
+                    <div class="text-xs space-y-2">
+                        <div class="flex justify-between"><span>Tingkat Kesalahan:</span><span id="careErrorRate" class="font-bold">0%</span></div>
+                        <div class="flex justify-between"><span>Tingkat Kelalaian:</span><span id="careOmissionRate" class="font-bold">0%</span></div>
+                        <div class="flex justify-between text-rose-400"><span>Salah Beruntun Maks:</span><span id="careMaxConsecutive" class="font-bold">0 Soal</span></div>
+                        <div class="flex justify-between"><span>Error Terlalu Cepat:</span><span id="careFastErrors" class="font-bold">0</span></div>
+                        <div class="flex justify-between"><span>Error Terlalu Lambat:</span><span id="careSlowErrors" class="font-bold">0</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-2 bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-3">
+                    <h3 class="text-xs font-black text-amber-400 uppercase border-b border-slate-800 pb-2"><i class="fa-solid fa-layer-group mr-2"></i> E. Konsistensi (5 Blok Pengerjaan)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-left border-collapse">
+                            <thead>
+                                <tr class="text-slate-400 border-b border-slate-800">
+                                    <th class="py-2">Blok Waktu</th>
+                                    <th class="py-2">Jumlah</th>
+                                    <th class="py-2 text-emerald-400">Benar</th>
+                                    <th class="py-2 text-rose-400">Salah</th>
+                                    <th class="py-2 text-slate-400">T.Dijawab</th>
+                                    <th class="py-2 text-amber-400">Akurasi</th>
+                                    <th class="py-2">Rata Waktu</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableConsistencyBody" class="divide-y divide-slate-800"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
+                    <div>
+                        <h3 class="text-xs font-black text-amber-400 uppercase border-b border-slate-800 pb-2 mb-2"><i class="fa-solid fa-battery-half mr-2"></i> F. Daya Tahan Konsentrasi</h3>
+                        <div class="text-xs space-y-1.5">
+                            <div class="flex justify-between"><span>Akurasi Awal vs Akhir:</span><span id="enduranceAccComp" class="font-bold">0% vs 0%</span></div>
+                            <div class="flex justify-between"><span>Perubahan Akurasi:</span><span id="enduranceAccChange" class="font-bold">0%</span></div>
+                            <div class="flex justify-between"><span>Perubahan Kecepatan:</span><span id="enduranceSpeedChange" class="font-bold">0%</span></div>
+                            <div id="enduranceNoteBox" class="mt-2 p-2 bg-slate-950 border border-slate-800 rounded-xl text-[11px] text-amber-300 font-medium"></div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-800 pt-3">
+                        <h3 class="text-xs font-black text-amber-400 uppercase border-b border-slate-800 pb-2 mb-2"><i class="fa-solid fa-magnifying-glass-chart mr-2"></i> G. Pola Kesalahan</h3>
+                        <p id="errorPatternText" class="text-xs text-slate-300 leading-relaxed"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
+                <h3 class="text-xs font-black text-amber-400 uppercase border-b border-slate-800 pb-2"><i class="fa-solid fa-chart-line mr-2"></i> I. Visualisasi Performance Dashboard</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block mb-2">1. Akurasi & Rata Waktu Per Blok</span>
+                        <div class="h-48"><canvas id="chartBlockPerformance"></canvas></div>
+                    </div>
+                    <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block mb-2">2. Akurasi Akumulatif (Running Accuracy)</span>
+                        <div class="h-48"><canvas id="chartRunningAccuracy"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-3">
+                    <h3 class="text-xs font-black text-amber-400 uppercase border-b border-slate-800 pb-2"><i class="fa-solid fa-lightbulb mr-2"></i> J. Insight Utama (Otomatis)</h3>
+                    <ul id="listInsights" class="text-xs text-slate-300 space-y-2 list-disc list-inside"></ul>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-3">
+                    <h3 class="text-xs font-black text-amber-400 uppercase border-b border-slate-800 pb-2"><i class="fa-solid fa-list-check mr-2"></i> K. Rekomendasi Latihan Terukur</h3>
+                    <ul id="listRecommendations" class="text-xs text-slate-300 space-y-2 list-disc list-inside"></ul>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-3">
+                <h3 class="text-xs font-black text-amber-400 uppercase border-b border-slate-800 pb-2"><i class="fa-solid fa-table-list mr-2"></i> H. Analisis Detail Per Soal</h3>
+                <div class="max-h-80 overflow-y-auto">
+                    <table class="w-full text-xs text-left border-collapse">
+                        <thead class="sticky top-0 bg-slate-950 text-slate-400 border-b border-slate-800">
+                            <tr>
+                                <th class="p-2">No</th>
+                                <th class="p-2">Kolom</th>
+                                <th class="p-2">Jawaban</th>
+                                <th class="p-2">Kunci</th>
+                                <th class="p-2">Status</th>
+                                <th class="p-2">Waktu (s)</th>
+                                <th class="p-2">Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableItemsBody" class="divide-y divide-slate-800"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODAL AUTHENTICATION -->
+    <div id="modalAuth" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative">
+            <button onclick="closeModal('modalAuth')" class="absolute top-5 right-5 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+
+            <div class="flex border-b border-slate-800 mb-6 font-bold text-sm">
+                <button id="tabBtnLogin" onclick="switchAuthTab('login')" class="flex-1 pb-3 text-amber-400 border-b-2 border-amber-400">Masuk</button>
+                <button id="tabBtnRegister" onclick="switchAuthTab('register')" class="flex-1 pb-3 text-slate-400 border-b-2 border-transparent hover:text-white">Daftar Akun</button>
+            </div>
+
+            <form id="formLogin" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Email</label>
+                    <input type="email" id="loginEmail" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl p-3 text-xs focus:outline-none focus:border-amber-500" placeholder="nama@email.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Kata Sandi</label>
+                    <input type="password" id="loginPassword" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl p-3 text-xs focus:outline-none focus:border-amber-500" placeholder="••••••••">
+                </div>
+                <div class="text-right">
+                    <button type="button" onclick="switchAuthTab('forgot')" class="text-xs text-amber-400 hover:underline font-semibold">Lupa Kata Sandi?</button>
+                </div>
+                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl transition shadow-lg shadow-amber-500/20 text-xs">MASUK SEKARANG</button>
+            </form>
+
+            <form id="formRegister" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Nama Lengkap</label>
+                    <input type="text" id="regNama" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl p-3 text-xs focus:outline-none focus:border-amber-500" placeholder="Ahmad Casis">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Email</label>
+                    <input type="email" id="regEmail" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl p-3 text-xs focus:outline-none focus:border-amber-500" placeholder="nama@email.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Kata Sandi</label>
+                    <input type="password" id="regPassword" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl p-3 text-xs focus:outline-none focus:border-amber-500" placeholder="••••••••">
+                </div>
+                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl transition shadow-lg shadow-amber-500/20 text-xs">DAFTAR AKUN BARU</button>
+            </form>
+
+            <form id="formForgot" onsubmit="handleForgotPassword(event)" class="space-y-4 hidden">
+                <div class="text-xs text-slate-300 mb-2">Masukkan email terdaftar dan buat kata sandi baru Anda:</div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Email Terdaftar</label>
+                    <input type="email" id="forgotEmail" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl p-3 text-xs focus:outline-none focus:border-amber-500" placeholder="nama@email.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Kata Sandi Baru</label>
+                    <input type="password" id="forgotNewPassword" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl p-3 text-xs focus:outline-none focus:border-amber-500" placeholder="••••••••">
+                </div>
+                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-xl transition shadow-lg shadow-amber-500/20 text-xs">RESET KATA SANDI</button>
+                <button type="button" onclick="switchAuthTab('login')" class="w-full text-xs text-slate-400 hover:text-white font-semibold">Kembali ke Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL SUBSCRIBE BERLANGGANAN & MIDTRANS QRIS -->
+    <div id="modalSubscribe" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-slate-900 border border-amber-500/30 rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl relative my-8">
+            <button onclick="closeModal('modalSubscribe')" class="absolute top-5 right-5 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+
+            <div id="subStep1">
+                <div class="text-center mb-6">
+                    <div class="w-14 h-14 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto text-xl mb-3">
+                        <i class="fa-solid fa-crown"></i>
+                    </div>
+                    <h3 class="text-xl font-black text-white">Pilih Paket Akses VIP CAT Polri</h3>
+                    <p class="text-xs text-slate-400 mt-1">Buka simulasi 10 kolom penuh, grafik running accuracy, dan indikator lengkap.</p>
+                </div>
+
+                <div class="space-y-3 mb-6">
+                    <label class="flex items-center justify-between p-4 rounded-2xl border border-slate-800 bg-slate-950 hover:border-amber-500 cursor-pointer transition">
+                        <div class="flex items-center gap-3">
+                            <input type="radio" name="planSelect" value="7_days" class="text-amber-500 focus:ring-amber-500">
+                            <div>
+                                <span class="block text-sm font-bold text-white">Paket 7 Hari</span>
+                                <span class="block text-[11px] text-slate-400">Akses Intensif Ujian Singkat</span>
+                            </div>
+                        </div>
+                        <span class="text-sm font-black text-amber-400">Rp 15.000</span>
+                    </label>
+
+                    <label class="flex items-center justify-between p-4 rounded-2xl border-2 border-amber-500/60 bg-amber-500/5 hover:border-amber-500 cursor-pointer transition relative">
+                        <span class="absolute -top-2.5 right-4 bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">Terfavorit</span>
+                        <div class="flex items-center gap-3">
+                            <input type="radio" name="planSelect" value="1_month" checked class="text-amber-500 focus:ring-amber-500">
+                            <div>
+                                <span class="block text-sm font-bold text-amber-300">Paket 1 Bulan (30 Hari)</span>
+                                <span class="block text-[11px] text-slate-400">Paket Hemat Persiapan Ujian</span>
+                            </div>
+                        </div>
+                        <span class="text-sm font-black text-amber-400">Rp 35.000</span>
+                    </label>
+
+                    <label class="flex items-center justify-between p-4 rounded-2xl border border-slate-800 bg-slate-950 hover:border-amber-500 cursor-pointer transition">
+                        <div class="flex items-center gap-3">
+                            <input type="radio" name="planSelect" value="3_months" class="text-amber-500 focus:ring-amber-500">
+                            <div>
+                                <span class="block text-sm font-bold text-white">Paket 3 Bulan (90 Hari)</span>
+                                <span class="block text-[11px] text-slate-400">Paket Mantap Persiapan Optimal</span>
+                            </div>
+                        </div>
+                        <span class="text-sm font-black text-amber-400">Rp 75.000</span>
+                    </label>
+
+                    <label class="flex items-center justify-between p-4 rounded-2xl border border-slate-800 bg-slate-950 hover:border-amber-500 cursor-pointer transition">
+                        <div class="flex items-center gap-3">
+                            <input type="radio" name="planSelect" value="6_months" class="text-amber-500 focus:ring-amber-500">
+                            <div>
+                                <span class="block text-sm font-bold text-white">Paket 6 Bulan (180 Hari)</span>
+                                <span class="block text-[11px] text-slate-400">Paket Super Latihan Berkelanjutan</span>
+                            </div>
+                        </div>
+                        <span class="text-sm font-black text-amber-400">Rp 120.000</span>
+                    </label>
+
+                    <label class="flex items-center justify-between p-4 rounded-2xl border border-slate-800 bg-slate-950 hover:border-amber-500 cursor-pointer transition">
+                        <div class="flex items-center gap-3">
+                            <input type="radio" name="planSelect" value="1_year" class="text-amber-500 focus:ring-amber-500">
+                            <div>
+                                <span class="block text-sm font-bold text-white">Paket 1 Tahun (365 Hari)</span>
+                                <span class="block text-[11px] text-slate-400">Akses Unlimited Sepanjang Tahun</span>
+                            </div>
+                        </div>
+                        <span class="text-sm font-black text-amber-400">Rp 199.000</span>
+                    </label>
+                </div>
+
+                <button onclick="proceedToQrisPayment()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black py-3.5 rounded-xl transition shadow-xl shadow-amber-500/20 text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-qrcode text-base"></i> BAYAR OTOMATIS DENGAN MIDTRANS QRIS
+                </button>
+            </div>
+
+            <div id="subStep2" class="hidden text-center space-y-5">
+                <div>
+                    <span class="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">Metode Pembayaran QRIS Midtrans</span>
+                    <h3 class="text-lg font-black text-white">Scan & Bayar Secara Real-Time</h3>
+                </div>
+
+                <div class="bg-white text-slate-950 p-6 rounded-3xl max-w-xs mx-auto shadow-2xl border-4 border-amber-500/50">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
+                        <span class="text-xs font-black tracking-widest text-slate-900">QRIS REAL-TIME</span>
+                        <span id="paymentStatusBadge" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-spinner animate-spin"></i> MENUNGGU
+                        </span>
+                    </div>
+
+                    <img id="qrisImageDisplay" src="" alt="Midtrans QRIS Code" class="w-52 h-52 mx-auto my-2 border border-slate-200 p-1.5 rounded-2xl shadow-inner">
+
+                    <div class="text-xs font-bold text-slate-600 mt-2">Total Pembayaran:</div>
+                    <div id="qrisAmountDisplay" class="text-2xl font-black text-slate-950">Rp 0</div>
+                    <div id="qrisPlanDisplay" class="text-[11px] font-semibold text-amber-600 mb-2">Paket 1 Bulan</div>
+                    <div class="text-[9px] text-slate-400 font-mono border-t border-slate-100 pt-2">Order ID: <span id="qrisOrderIdDisplay">-</span></div>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-xs text-slate-300 text-left space-y-1.5">
+                    <div class="font-bold text-amber-400 mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Instruksi Bayar:</div>
+                    <p>1. Buka aplikasi M-Banking atau e-Wallet pilihan Anda.</p>
+                    <p>2. Arahkan kamera ke kode QRIS Midtrans di atas.</p>
+                    <p>3. Setelah bayar, akun VIP Anda akan langsung aktif secara otomatis!</p>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="backToSubStep1()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition text-xs">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Ubah Paket
+                    </button>
+                    <button onclick="simulasiBayarSuksesTest()" class="flex-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 font-bold py-3 rounded-xl transition text-xs">
+                        <i class="fa-solid fa-vial"></i> Test Bayar (Local)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL RIWAYAT LATIHAN -->
+    <div id="modalHistory" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-3xl w-full shadow-2xl relative my-8 max-h-[90vh] flex flex-col">
+            <button onclick="closeModal('modalHistory')" class="absolute top-5 right-5 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+
+            <div class="border-b border-slate-800 pb-4 mb-4">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-amber-400 text-lg"></i>
+                    <h3 class="text-xl font-black text-white">Riwayat Latihan Saya</h3>
+                </div>
+                <p class="text-xs text-slate-400 mt-1">Daftar riwayat tes kecermatan yang tersimpan pada akun Anda.</p>
+            </div>
+
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="historyListContainer">
+                <div class="text-center py-8 text-slate-500 text-xs">
+                    <i class="fa-solid fa-spinner animate-spin text-2xl mb-2 text-amber-400 block"></i>
+                    Memuat riwayat latihan...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT CLIENT ENGINE -->
+    <script>
+        class KecermatanAnalyzer {
+            constructor(options) {
+                options = options || {};
+                this.thresholds = {
+                    accuracyHigh: options.accuracyHigh !== undefined ? options.accuracyHigh : 90,
+                    accuracyLow: options.accuracyLow !== undefined ? options.accuracyLow : 75,
+                    speedFastMedian: options.speedFastMedian !== undefined ? options.speedFastMedian : 1.5,
+                    speedSlowMedian: options.speedSlowMedian !== undefined ? options.speedSlowMedian : 2.5,
+                    consistencyCvMax: options.consistencyCvMax !== undefined ? options.consistencyCvMax : 0.25,
+                    enduranceDropPct: options.enduranceDropPct !== undefined ? options.enduranceDropPct : 10,
+                    fastErrorRatio: options.fastErrorRatio !== undefined ? options.fastErrorRatio : 0.5,
+                    slowErrorRatio: options.slowErrorRatio !== undefined ? options.slowErrorRatio : 1.5,
+                    minRequiredData: options.minRequiredData !== undefined ? options.minRequiredData : 5
+                };
+            }
+
+            static median(val) {
+                if (!val || val.length === 0) return 0;
+                var sorted = val.slice().sort((a, b) => a - b);
+                var half = Math.floor(sorted.length / 2);
+                return sorted.length % 2 !== 0 ? sorted[half] : (sorted[half - 1] + sorted[half]) / 2.0;
+            }
+
+            static average(val) {
+                if (!val || val.length === 0) return 0;
+                return val.reduce((s, v) => s + v, 0) / val.length;
+            }
+
+            static stdDev(val) {
+                var avg = KecermatanAnalyzer.average(val);
+                if (val.length <= 1) return 0;
+                return Math.sqrt(KecermatanAnalyzer.average(val.map(v => Math.pow(v - avg, 2))));
+            }
+
+            analyze(rawItems) {
+                rawItems = rawItems || [];
+                if (!rawItems || rawItems.length < this.thresholds.minRequiredData) return { status: "DATA_INSUFFICIENT" };
+
+                var totalSoal = rawItems.length;
+                var answeredItems = rawItems.filter(i => i.status !== 'tidak_dijawab');
+                var totalDijawab = answeredItems.length;
+                var totalBenar = rawItems.filter(i => i.status === 'benar').length;
+                var totalSalah = rawItems.filter(i => i.status === 'salah').length;
+                var totalTidakDijawab = totalSoal - totalDijawab;
+
+                var accuracy = totalDijawab > 0 ? (totalBenar / totalDijawab) * 100 : 0;
+                var completionRate = (totalDijawab / totalSoal) * 100;
+                var errorRate = totalDijawab > 0 ? (totalSalah / totalDijawab) * 100 : 0;
+                var omissionRate = (totalTidakDijawab / totalSoal) * 100;
+
+                var allTimes = rawItems.map(i => i.durasi_pengerjaan);
+                var correctTimes = rawItems.filter(i => i.status === 'benar').map(i => i.durasi_pengerjaan);
+                var wrongTimes = rawItems.filter(i => i.status === 'salah').map(i => i.durasi_pengerjaan);
+                var totalDuration = allTimes.reduce((a, b) => a + b, 0);
+                var medianTime = KecermatanAnalyzer.median(allTimes);
+
+                var speedMetrics = {
+                    avgTimePerQuestion: KecermatanAnalyzer.average(allTimes),
+                    medianTimePerQuestion: medianTime,
+                    fastestTime: allTimes.length > 0 ? Math.min(...allTimes) : 0,
+                    slowestTime: allTimes.length > 0 ? Math.max(...allTimes) : 0,
+                    questionsPerMinute: totalDuration > 0 ? (totalSoal / (totalDuration / 60)) : 0,
+                    avgTimeCorrect: KecermatanAnalyzer.average(correctTimes),
+                    avgTimeWrong: KecermatanAnalyzer.average(wrongTimes)
+                };
+
+                var fastErrorCount = 0, slowErrorCount = 0, consecutiveErrors = 0, maxConsecutiveErrors = 0;
+                var self = this;
+
+                var itemAnalysis = rawItems.map((item, idx) => {
+                    var isCorrect = item.status === 'benar';
+                    var isWrong = item.status === 'salah';
+                    var isUnanswered = item.status === 'tidak_dijawab';
+
+                    if (isWrong) {
+                        consecutiveErrors++;
+                        if (consecutiveErrors > maxConsecutiveErrors) maxConsecutiveErrors = consecutiveErrors;
+                    } else { consecutiveErrors = 0; }
+
+                    var keterangan = isCorrect ? "Sesuai" : (isUnanswered ? "Tidak Dijawab" : "Salah");
+
+                    if (isWrong && item.durasi_pengerjaan < (medianTime * self.thresholds.fastErrorRatio)) {
+                        fastErrorCount++; keterangan = "Error (Terlalu Cepat)";
+                    } else if (isWrong && item.durasi_pengerjaan > (medianTime * self.thresholds.slowErrorRatio)) {
+                        slowErrorCount++; keterangan = "Error (Terlalu Lambat)";
+                    }
+
+                    return {
+                        no: item.nomor_soal || (idx + 1),
+                        kolom: item.kolom || 1,
+                        jawaban: item.jawaban_peserta || "-",
+                        kunci: item.kunci_jawaban,
+                        status: item.status,
+                        waktu: item.durasi_pengerjaan,
+                        keterangan: keterangan
+                    };
+                });
+
+                var blockSize = Math.ceil(totalSoal / 5);
+                var blocks = [];
+                var blockAccuracies = [];
+
+                for (var b = 0; b < 5; b++) {
+                    var slice = rawItems.slice(b * blockSize, (b + 1) * blockSize);
+                    if (slice.length === 0) continue;
+                    var bTotal = slice.length;
+                    var bDijawab = slice.filter(i => i.status !== 'tidak_dijawab').length;
+                    var bBenar = slice.filter(i => i.status === 'benar').length;
+                    var bSalah = slice.filter(i => i.status === 'salah').length;
+                    var bAcc = bDijawab > 0 ? (bBenar / bDijawab) * 100 : 0;
+                    var bAvgTime = KecermatanAnalyzer.average(slice.map(i => i.durasi_pengerjaan));
+
+                    blockAccuracies.push(bAcc);
+                    blocks.push({
+                        label: (b * 20) + '–' + ((b + 1) * 20) + '%',
+                        totalSoal: bTotal, benar: bBenar, salah: bSalah,
+                        tidakDijawab: bTotal - bDijawab, accuracy: bAcc, avgTime: bAvgTime
+                    });
+                }
+
+                var accStdDev = KecermatanAnalyzer.stdDev(blockAccuracies);
+                var accAvg = KecermatanAnalyzer.average(blockAccuracies);
+                var cvAcc = accAvg > 0 ? accStdDev / accAvg : 0;
+
+                var earlyBlock = blocks[0] || { accuracy: 0, avgTime: 0 };
+                var lateBlock = blocks[blocks.length - 1] || { accuracy: 0, avgTime: 0 };
+                var accChangePct = earlyBlock.accuracy > 0 ? ((lateBlock.accuracy - earlyBlock.accuracy) / earlyBlock.accuracy) * 100 : 0;
+                var speedChangePct = earlyBlock.avgTime > 0 ? ((lateBlock.avgTime - earlyBlock.avgTime) / earlyBlock.avgTime) * 100 : 0;
+
+                var enduranceNote = "Performa konsisten dari awal hingga akhir tes.";
+                if (earlyBlock.accuracy - lateBlock.accuracy >= this.thresholds.enduranceDropPct && lateBlock.avgTime > earlyBlock.avgTime) {
+                    enduranceNote = "Indikator penurunan konsistensi pada bagian akhir tes.";
+                }
+
+                var tradeOffCategory = "N/A";
+                var isFast = speedMetrics.medianTimePerQuestion <= this.thresholds.speedFastMedian;
+                var isAccurate = accuracy >= this.thresholds.accuracyHigh;
+                if (isFast && isAccurate) tradeOffCategory = "A. Cepat + akurat";
+                else if (isFast && !isAccurate) tradeOffCategory = "B. Cepat + banyak kesalahan";
+                else if (!isFast && isAccurate) tradeOffCategory = "C. Lambat + akurat";
+                else tradeOffCategory = "D. Lambat + banyak kesalahan";
+
+                var scoreAccComp = accuracy * 0.40;
+                var speedScoreRaw = medianTime > 0 ? Math.min(100, (1.8 / medianTime) * 100) : 70;
+                var scoreSpeedComp = speedScoreRaw * 0.20;
+                var scoreConsistencyComp = Math.max(0, (1 - cvAcc) * 100) * 0.20;
+                var scoreCompletionComp = completionRate * 0.10;
+                var scoreErrorControlComp = Math.max(0, 100 - errorRate) * 0.10;
+                var compositeScore = Math.round(scoreAccComp + scoreSpeedComp + scoreConsistencyComp + scoreCompletionComp + scoreErrorControlComp);
+
+                var categoryResult = "Konsisten";
+                if (accuracy >= this.thresholds.accuracyHigh && cvAcc <= this.thresholds.consistencyCvMax) categoryResult = "Sangat Konsisten";
+                else if (accuracy < this.thresholds.accuracyLow && isFast) categoryResult = "Perlu Meningkatkan Ketelitian";
+                else if (accuracy >= this.thresholds.accuracyLow && !isFast) categoryResult = "Perlu Meningkatkan Kecepatan";
+                else if (accuracy < this.thresholds.accuracyLow && !isFast) categoryResult = "Perlu Meningkatkan Kecepatan dan Ketelitian";
+
+                var insights = [
+                    `Akurasi sebesar ${accuracy.toFixed(1)}% dengan tingkat penyelesaian ${completionRate.toFixed(1)}%.`,
+                    `Rata-rata waktu per soal ${speedMetrics.avgTimePerQuestion.toFixed(2)} detik (Median: ${medianTime.toFixed(2)}s).`,
+                    enduranceNote
+                ];
+                if (fastErrorCount > 0) insights.push(`Terdeteksi ${fastErrorCount} kesalahan karena terlalu tergesa-gesa.`);
+                if (maxConsecutiveErrors >= 2) insights.push(`Terjadi ${maxConsecutiveErrors} kesalahan berturut-turut.`);
+
+                var recommendations = [];
+                if (accuracy < this.thresholds.accuracyLow) recommendations.push("Latihan Ketelitian: Fokus memverifikasi karakter acuan sebelum menjawab.");
+                if (!isFast) recommendations.push("Latihan Speed Building: Gunakan metronom untuk mempercepat gerakan mata.");
+                if (enduranceNote.includes("penurunan")) recommendations.push("Latihan Endurance: Tambahkan volume pengerjaan soal secara bertahap.");
+                if (recommendations.length === 0) recommendations.push("Pertahankan ritme latihan saat ini dan tingkatkan variasi simbol/karakter.");
+
+                return {
+                    status: "SUCCESS",
+                    summary: { totalSoal, totalDijawab, totalBenar, totalSalah, totalTidakDijawab, accuracy: accuracy.toFixed(1), completionRate: completionRate.toFixed(1), compositeScore, categoryResult },
+                    speedMetrics,
+                    carefulnessMetrics: { errorRate: errorRate.toFixed(1), omissionRate: omissionRate.toFixed(1), maxConsecutiveErrors, fastErrorCount, slowErrorCount },
+                    consistencyBlocks: blocks,
+                    enduranceMetrics: { earlyAcc: earlyBlock.accuracy.toFixed(1), lateAcc: lateBlock.accuracy.toFixed(1), accChangePct: accChangePct.toFixed(1), speedChangePct: speedChangePct.toFixed(1), enduranceNote },
+                    errorPattern: maxConsecutiveErrors >= 2 ? `Terdeteksi kesalahan beruntun maks ${maxConsecutiveErrors} soal.` : "Tidak ditemukan pola kesalahan yang konsisten.",
+                    tradeOffCategory,
+                    itemAnalysis,
+                    chartData: {
+                        blockLabels: blocks.map(b => b.label),
+                        blockAcc: blocks.map(b => b.accuracy.toFixed(1)),
+                        blockTime: blocks.map(b => b.avgTime.toFixed(2)),
+                        runningAcc: rawAnswerLogs.reduce((acc, curr, idx) => {
+                            var sub = rawAnswerLogs.slice(0, idx + 1);
+                            var c = sub.filter(x => x.status === 'benar').length;
+                            acc.push(((c / (idx + 1)) * 100).toFixed(1));
+                            return acc;
+                        }, [])
+                    },
+                    insights: insights.slice(0, 5),
+                    recommendations
+                };
+            }
+        }
+
+        const CHAR_SETS = {
+            huruf: ['A','B','C','D','E','F','G','H','J','K','L','M','N','P','Q','R','S','T','U','V','W','X','Y','Z'],
+            angka: ['1','2','3','4','5','6','7','8','9'],
+            simbol: ['@','#','$','%','&','*','?','!','+','=']
+        };
+
+        let currentUser = null;
+        let currentTransaction = null;
+        let paymentPollingInterval = null;
+        let examConfig = { category: 'huruf', itemCount: 40, timerSeconds: 60, totalColumns: 2 };
+        let currentColumnNum = 1;
+        let currentQuestionIndex = 0;
+        let timerInterval = null;
+        let timeRemaining = 60;
+        let examQuestions = [];
+        let rawAnswerLogs = [];
+        let questionStartTime = 0;
+        let currentKeys = [];
+        let realTimeSubTicker = null;
+        let chart1Instance = null;
+        let chart2Instance = null;
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { 
+            document.getElementById(id).classList.add('hidden'); 
+            if (id === 'modalSubscribe' && paymentPollingInterval) clearInterval(paymentPollingInterval);
+        }
+
+        function switchAuthTab(tab) {
+            document.getElementById('formLogin').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('formRegister').classList.toggle('hidden', tab !== 'register');
+            document.getElementById('formForgot').classList.toggle('hidden', tab !== 'forgot');
+
+            document.getElementById('tabBtnLogin').className = tab === 'login' ? 'flex-1 pb-3 text-amber-400 border-b-2 border-amber-400' : 'flex-1 pb-3 text-slate-400 border-b-2 border-transparent hover:text-white';
+            document.getElementById('tabBtnRegister').className = tab === 'register' ? 'flex-1 pb-3 text-amber-400 border-b-2 border-amber-400' : 'flex-1 pb-3 text-slate-400 border-b-2 border-transparent hover:text-white';
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: document.getElementById('loginEmail').value, password: document.getElementById('loginPassword').value })
+            });
+            const data = await res.json();
+            if (data.success) {
+                currentUser = data.user;
+                updateUserUI();
+                closeModal('modalAuth');
+                alert(data.message);
+            } else alert(data.message);
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nama: document.getElementById('regNama').value, email: document.getElementById('regEmail').value, password: document.getElementById('regPassword').value })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                switchAuthTab('login');
+            } else alert(data.message);
+        }
+
+        async function handleForgotPassword(e) {
+            e.preventDefault();
+            const res = await fetch('/api/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: document.getElementById('forgotEmail').value, newPassword: document.getElementById('forgotNewPassword').value })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                switchAuthTab('login');
+            } else alert(data.message);
+        }
+
+        async function proceedToQrisPayment() {
+            if (!currentUser) {
+                closeModal('modalSubscribe');
+                openModal('modalAuth');
+                alert("Silakan login atau daftar akun terlebih dahulu!");
+                return;
+            }
+
+            const selectedPlan = document.querySelector('input[name="planSelect"]:checked').value;
+            const res = await fetch('/api/create-qris-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: currentUser.email, planId: selectedPlan })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                currentTransaction = data.transaction;
+                document.getElementById('qrisImageDisplay').src = currentTransaction.qrisImageUrl;
+                document.getElementById('qrisAmountDisplay').innerText = 'Rp ' + currentTransaction.amount.toLocaleString('id-ID');
+                document.getElementById('qrisPlanDisplay').innerText = 'Paket ' + currentTransaction.planName;
+                document.getElementById('qrisOrderIdDisplay').innerText = currentTransaction.orderId;
+
+                document.getElementById('subStep1').classList.add('hidden');
+                document.getElementById('subStep2').classList.remove('hidden');
+
+                startRealTimePaymentPolling(currentTransaction.orderId);
+            } else alert(data.message);
+        }
+
+        function startRealTimePaymentPolling(orderId) {
+            if (paymentPollingInterval) clearInterval(paymentPollingInterval);
+            paymentPollingInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/check-payment-status?orderId=' + orderId);
+                    const data = await res.json();
+
+                    if (data.success && data.isSettlement) {
+                        clearInterval(paymentPollingInterval);
+                        currentUser = data.user;
+                        updateUserUI();
+
+                        document.getElementById('paymentStatusBadge').className = 'text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-bold flex items-center gap-1';
+                        document.getElementById('paymentStatusBadge').innerHTML = '<i class="fa-solid fa-check"></i> BERHASIL';
+
+                        setTimeout(() => {
+                            alert("🎉 Pembayaran Berhasil! Akun Anda kini VIP.");
+                            backToSubStep1();
+                            closeModal('modalSubscribe');
+                        }, 500);
+                    }
+                } catch (e) { console.error('Polling error:', e); }
+            }, 2500);
+        }
+
+        async function simulasiBayarSuksesTest() {
+            if (!currentTransaction) return;
+            const res = await fetch('/api/simulasi-pembayaran-sukses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: currentTransaction.orderId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                currentUser = data.user;
+                updateUserUI();
+                backToSubStep1();
+                closeModal('modalSubscribe');
+                alert(data.message);
+            }
+        }
+
+        function backToSubStep1() {
+            if (paymentPollingInterval) clearInterval(paymentPollingInterval);
+            document.getElementById('subStep2').classList.add('hidden');
+            document.getElementById('subStep1').classList.remove('hidden');
+        }
+
+        function logout() {
+            currentUser = null;
+            updateUserUI();
+            alert("Anda telah keluar.");
+        }
+
+        function formatRemainingTime(subscriptionUntil) {
+            if (!subscriptionUntil) return null;
+            const diff = subscriptionUntil - Date.now();
+            if (diff <= 0) return null;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+            if (days > 0) return `Sisa: ${days} Hari ${hours} Jam`;
+            if (hours > 0) return `Sisa: ${hours} Jam ${mins} Menit`;
+            return `Sisa: ${mins} Menit`;
+        }
+
+        function updateUserUI() {
+            if (realTimeSubTicker) clearInterval(realTimeSubTicker);
+
+            if (currentUser) {
+                document.getElementById('userStatusBadge').className = 'flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-full text-xs font-bold text-slate-300';
+                document.getElementById('userNameDisplay').innerText = currentUser.nama;
+                document.getElementById('btnAuthHeader').classList.add('hidden');
+                document.getElementById('btnLogoutHeader').classList.remove('hidden');
+                document.getElementById('btnHistoryHeader').classList.remove('hidden');
+                document.getElementById('bannerUserStatusPanel').classList.remove('hidden');
+
+                const updateTimeBadge = () => {
+                    const now = Date.now();
+                    const isSubscribed = currentUser.subscriptionUntil && currentUser.subscriptionUntil > now;
+                    currentUser.isSubscribed = isSubscribed;
+
+                    if (isSubscribed) {
+                        document.getElementById('vipBadge').innerText = 'VIP';
+                        document.getElementById('vipBadge').className = 'bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full text-[10px] font-black uppercase';
+                        document.getElementById('btnSubscribeHeader').classList.add('hidden');
+
+                        const remText = formatRemainingTime(currentUser.subscriptionUntil);
+                        document.getElementById('subRemainingDisplay').classList.remove('hidden');
+                        document.getElementById('subRemainingDisplay').innerText = remText ? `(${remText})` : '';
+                        document.getElementById('panelStatusText').innerText = `VIP ACTIVE (${remText})`;
+                    } else {
+                        document.getElementById('vipBadge').innerText = 'Trial';
+                        document.getElementById('vipBadge').className = 'bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full text-[10px] font-black uppercase';
+                        document.getElementById('btnSubscribeHeader').classList.remove('hidden');
+                        document.getElementById('subRemainingDisplay').classList.add('hidden');
+                        document.getElementById('panelStatusText').innerText = 'TRIAL';
+                    }
+                };
+
+                updateTimeBadge();
+                realTimeSubTicker = setInterval(updateTimeBadge, 10000);
+            } else {
+                document.getElementById('userStatusBadge').classList.add('hidden');
+                document.getElementById('btnAuthHeader').classList.remove('hidden');
+                document.getElementById('btnLogoutHeader').classList.add('hidden');
+                document.getElementById('btnHistoryHeader').classList.add('hidden');
+                document.getElementById('btnSubscribeHeader').classList.remove('hidden');
+                document.getElementById('bannerUserStatusPanel').classList.add('hidden');
+            }
+        }
+
+        async function openHistoryModal() {
+            if (!currentUser) {
+                openModal('modalAuth');
+                alert("Silakan login untuk melihat riwayat latihan Anda!");
+                return;
+            }
+
+            openModal('modalHistory');
+            const container = document.getElementById('historyListContainer');
+            container.innerHTML = '<div class="text-center py-8 text-slate-500 text-xs"><i class="fa-solid fa-spinner animate-spin text-2xl mb-2 text-amber-400 block"></i>Memuat riwayat latihan...</div>';
+
+            try {
+                const res = await fetch('/api/user-history?email=' + encodeURIComponent(currentUser.email));
+                const data = await res.json();
+
+                if (data.success && data.history && data.history.length > 0) {
+                    container.innerHTML = '';
+                    data.history.forEach(rec => {
+                        const catText = rec.category ? rec.category.toUpperCase() : 'HURUF';
+                        container.innerHTML += `
+                            <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-amber-500/40 transition">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md font-tech uppercase">${catText}</span>
+                                        <span class="text-xs text-slate-400 font-medium">${rec.dateFormatted}</span>
+                                    </div>
+                                    <div class="text-sm font-bold text-white">${rec.totalColumns} Kolom (${rec.itemCountPerCol} Soal/Kolom)</div>
+                                    <div class="text-xs text-slate-400 mt-0.5">${rec.tradeOffCategory || '-'}</div>
+                                </div>
+                                <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-slate-800 pt-2 sm:pt-0">
+                                    <div class="text-center">
+                                        <span class="text-[10px] text-slate-500 uppercase block font-bold">Skor</span>
+                                        <span class="text-xl font-black text-amber-400 font-tech">${rec.summary.compositeScore}</span>
+                                    </div>
+                                    <div class="text-center">
+                                        <span class="text-[10px] text-slate-500 uppercase block font-bold">Akurasi</span>
+                                        <span class="text-sm font-bold text-emerald-400">${rec.summary.accuracy}%</span>
+                                    </div>
+                                    <div class="text-center">
+                                        <span class="text-[10px] text-slate-500 uppercase block font-bold">Rata Waktu</span>
+                                        <span class="text-sm font-bold text-slate-300">${rec.speedMetrics.avgTimePerQuestion.toFixed(2)}s</span>
+                                    </div>
+                                </div>
+                            </div>`;
+                    });
+                } else {
+                    container.innerHTML = '<div class="text-center py-10 text-slate-500 text-xs"><i class="fa-solid fa-folder-open text-3xl mb-2 block text-slate-600"></i>Belum ada riwayat latihan.</div>';
+                }
+            } catch (err) {
+                container.innerHTML = '<div class="text-center py-8 text-rose-400 text-xs">Gagal mengambil riwayat.</div>';
+            }
+        }
+
+        function checkAndStartExam() {
+            const selectedMode = document.querySelector('input[name="modeSimulasi"]:checked').value;
+            if (selectedMode === 'full') {
+                if (!currentUser || !currentUser.isSubscribed) {
+                    openModal('modalSubscribe');
+                    alert("Mode Simulasi 10 Kolom Penuh hanya tersedia untuk akun VIP.");
+                    return;
+                }
+                examConfig.totalColumns = 10;
+            } else examConfig.totalColumns = 2;
+
+            examConfig.category = document.getElementById('selectCategory').value;
+            examConfig.itemCount = parseInt(document.getElementById('selectItemCount').value);
+            examConfig.timerSeconds = parseInt(document.getElementById('selectTimer').value);
+
+            currentColumnNum = 1;
+            rawAnswerLogs = [];
+            startColumnExam();
+        }
+
+        function startColumnExam() {
+            generateExamQuestionsForColumn();
+            currentQuestionIndex = 0;
+            timeRemaining = examConfig.timerSeconds;
+
+            document.getElementById('panelSetup').classList.add('hidden');
+            document.getElementById('panelIntermission').classList.add('hidden');
+            document.getElementById('panelExam').classList.remove('hidden');
+            document.getElementById('totalQuestionNum').innerText = examConfig.itemCount;
+            document.getElementById('displayColumnBadge').innerText = `KOLOM ${currentColumnNum} / ${examConfig.totalColumns}`;
+
+            renderKeys();
+            showQuestion();
+            startTimer();
+            setupKeyboard();
+        }
+
+        function generateExamQuestionsForColumn() {
+            const source = CHAR_SETS[examConfig.category].slice().sort(() => Math.random() - 0.5);
+            currentKeys = source.slice(0, 5);
+            examQuestions = [];
+
+            const options = ['A','B','C','D','E'];
+            for (let q = 0; q < examConfig.itemCount; q++) {
+                const missingIdx = Math.floor(Math.random() * 5);
+                const visible = currentKeys.filter((_, idx) => idx !== missingIdx).sort(() => Math.random() - 0.5);
+                examQuestions.push({ visible: visible.join(' '), kunci: options[missingIdx], missingChar: currentKeys[missingIdx] });
+            }
+        }
+
+        function renderKeys() {
+            const keyGrid = document.getElementById('keyGrid');
+            keyGrid.innerHTML = '';
+            const options = ['A','B','C','D','E'];
+            currentKeys.forEach((char, idx) => {
+                keyGrid.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-xl">
+                        <span class="text-xl font-black font-tech text-white block">${char}</span>
+                        <span class="text-[10px] font-bold text-amber-400 block">${options[idx]}</span>
+                    </div>`;
+            });
+        }
+
+        function showQuestion() {
+            if (currentQuestionIndex >= examQuestions.length) { handleColumnEnd(); return; }
+            const q = examQuestions[currentQuestionIndex];
+            document.getElementById('currentQuestionNum').innerText = currentQuestionIndex + 1;
+            document.getElementById('questionDisplay').innerText = q.visible;
+            questionStartTime = performance.now();
+        }
+
+        function submitAnswer(chosenOption) {
+            if (currentQuestionIndex >= examQuestions.length) return;
+            const now = performance.now();
+            const durationSec = Math.max(0.1, (now - questionStartTime) / 1000);
+            const q = examQuestions[currentQuestionIndex];
+
+            rawAnswerLogs.push({
+                kolom: currentColumnNum,
+                nomor_soal: (currentColumnNum - 1) * examConfig.itemCount + (currentQuestionIndex + 1),
+                kunci_jawaban: q.kunci,
+                jawaban_peserta: chosenOption,
+                durasi_pengerjaan: Number(durationSec.toFixed(2)),
+                status: chosenOption === q.kunci ? 'benar' : 'salah'
+            });
+
+            currentQuestionIndex++;
+            showQuestion();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                const mins = Math.floor(timeRemaining / 60);
+                const secs = timeRemaining % 60;
+                document.getElementById('displayTimer').innerText = `${mins < 10 ? '0' + mins : mins}:${secs < 10 ? '0' + secs : secs}`;
+                if (--timeRemaining < 0) { clearInterval(timerInterval); autoFillUnanswered(); handleColumnEnd(); }
+            }, 1000);
+        }
+
+        function autoFillUnanswered() {
+            for (let i = currentQuestionIndex; i < examQuestions.length; i++) {
+                rawAnswerLogs.push({
+                    kolom: currentColumnNum,
+                    nomor_soal: (currentColumnNum - 1) * examConfig.itemCount + (i + 1),
+                    kunci_jawaban: examQuestions[i].kunci,
+                    jawaban_peserta: '-',
+                    durasi_pengerjaan: 0,
+                    status: 'tidak_dijawab'
+                });
+            }
+        }
+
+        function handleColumnEnd() {
+            clearInterval(timerInterval);
+            if (currentColumnNum < examConfig.totalColumns) {
+                document.getElementById('panelExam').classList.add('hidden');
+                document.getElementById('panelIntermission').classList.remove('hidden');
+                document.getElementById('intermissionPrevCol').innerText = currentColumnNum;
+                document.getElementById('intermissionNextCol').innerText = currentColumnNum + 1;
+
+                let countdown = 3;
+                document.getElementById('intermissionCountdown').innerText = countdown;
+                const cdInterval = setInterval(() => {
+                    countdown--;
+                    document.getElementById('intermissionCountdown').innerText = countdown;
+                    if (countdown <= 0) {
+                        clearInterval(cdInterval);
+                        currentColumnNum++;
+                        startColumnExam();
+                    }
+                }, 1000);
+            } else finishFullExam();
+        }
+
+        function setupKeyboard() {
+            window.onkeydown = (e) => {
+                if (document.getElementById('panelExam').classList.contains('hidden')) return;
+                const map = { 'a':'A','b':'B','c':'C','d':'D','e':'E','1':'A','2':'B','3':'C','4':'D','5':'E' };
+                if (map[e.key.toLowerCase()]) submitAnswer(map[e.key.toLowerCase()]);
+            };
+        }
+
+        async function finishFullExam() {
+            clearInterval(timerInterval);
+            document.getElementById('panelExam').classList.add('hidden');
+            document.getElementById('panelIntermission').classList.add('hidden');
+            document.getElementById('panelResult').classList.remove('hidden');
+            document.getElementById('resTotalCols').innerText = examConfig.totalColumns;
+
+            if (!currentUser || !currentUser.isSubscribed) {
+                document.getElementById('trialPromoBanner').className = 'bg-gradient-to-r from-amber-500/20 via-slate-900 to-amber-500/10 border border-amber-500/40 p-5 rounded-3xl flex justify-between items-center';
+            } else document.getElementById('trialPromoBanner').classList.add('hidden');
+
+            const analyzer = new KecermatanAnalyzer();
+            const report = analyzer.analyze(rawAnswerLogs);
+            if (report.status !== "SUCCESS") { alert("Data jawaban kurang!"); return; }
+
+            if (currentUser) {
+                try {
+                    await fetch('/api/save-practice-history', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: currentUser.email,
+                            historyData: {
+                                category: examConfig.category,
+                                totalColumns: examConfig.totalColumns,
+                                itemCountPerCol: examConfig.itemCount,
+                                summary: report.summary,
+                                speedMetrics: report.speedMetrics,
+                                tradeOffCategory: report.tradeOffCategory
+                            }
+                        })
+                    });
+                } catch (e) { console.error("Gagal menyimpan riwayat:", e); }
+            }
+
+            document.getElementById('resCompositeScore').innerText = report.summary.compositeScore;
+            document.getElementById('resCategoryResult').innerText = report.summary.categoryResult;
+            document.getElementById('resTradeOff').innerText = report.tradeOffCategory;
+
+            document.getElementById('statTotal').innerText = report.summary.totalSoal;
+            document.getElementById('statAnswered').innerText = report.summary.totalDijawab;
+            document.getElementById('statCorrect').innerText = report.summary.totalBenar;
+            document.getElementById('statWrong').innerText = report.summary.totalSalah;
+            document.getElementById('statUnanswered').innerText = report.summary.totalTidakDijawab;
+            document.getElementById('statAccuracy').innerText = report.summary.accuracy + '%';
+            document.getElementById('statCompletion').innerText = report.summary.completionRate + '%';
+
+            document.getElementById('spAvg').innerText = report.speedMetrics.avgTimePerQuestion.toFixed(2) + 's';
+            document.getElementById('spMedian').innerText = report.speedMetrics.medianTimePerQuestion.toFixed(2) + 's';
+            document.getElementById('spFastest').innerText = report.speedMetrics.fastestTime.toFixed(2) + 's';
+            document.getElementById('spSlowest').innerText = report.speedMetrics.slowestTime.toFixed(2) + 's';
+            document.getElementById('spQpm').innerText = report.speedMetrics.questionsPerMinute.toFixed(1) + ' soal/m';
+            document.getElementById('spAvgCorrect').innerText = report.speedMetrics.avgTimeCorrect.toFixed(2) + 's';
+            document.getElementById('spAvgWrong').innerText = report.speedMetrics.avgTimeWrong.toFixed(2) + 's';
+
+            document.getElementById('careErrorRate').innerText = report.carefulnessMetrics.errorRate + '%';
+            document.getElementById('careOmissionRate').innerText = report.carefulnessMetrics.omissionRate + '%';
+            document.getElementById('careMaxConsecutive').innerText = report.carefulnessMetrics.maxConsecutiveErrors + ' Soal';
+            document.getElementById('careFastErrors').innerText = report.carefulnessMetrics.fastErrorCount;
+            document.getElementById('careSlowErrors').innerText = report.carefulnessMetrics.slowErrorCount;
+
+            const tbodyConsistency = document.getElementById('tableConsistencyBody');
+            tbodyConsistency.innerHTML = '';
+            report.consistencyBlocks.forEach(b => {
+                tbodyConsistency.innerHTML += `
+                    <tr>
+                        <td class="py-2 font-bold">${b.label}</td>
+                        <td class="py-2">${b.totalSoal}</td>
+                        <td class="py-2 text-emerald-400 font-bold">${b.benar}</td>
+                        <td class="py-2 text-rose-400 font-bold">${b.salah}</td>
+                        <td class="py-2">${b.tidakDijawab}</td>
+                        <td class="py-2 font-bold text-amber-400">${b.accuracy.toFixed(1)}%</td>
+                        <td class="py-2">${b.avgTime.toFixed(2)}s</td>
+                    </tr>`;
+            });
+
+            document.getElementById('enduranceAccComp').innerText = `${report.enduranceMetrics.earlyAcc}% vs ${report.enduranceMetrics.lateAcc}%`;
+            document.getElementById('enduranceAccChange').innerText = report.enduranceMetrics.accChangePct + '%';
+            document.getElementById('enduranceSpeedChange').innerText = report.enduranceMetrics.speedChangePct + '%';
+            document.getElementById('enduranceNoteBox').innerText = report.enduranceMetrics.enduranceNote;
+            document.getElementById('errorPatternText').innerText = report.errorPattern;
+
+            document.getElementById('listInsights').innerHTML = report.insights.map(i => `<li>${i}</li>`).join('');
+            document.getElementById('listRecommendations').innerHTML = report.recommendations.map(r => `<li>${r}</li>`).join('');
+
+            const tbodyItems = document.getElementById('tableItemsBody');
+            tbodyItems.innerHTML = '';
+            report.itemAnalysis.forEach(item => {
+                const badgeClass = item.status === 'benar' ? 'text-emerald-400' : (item.status === 'salah' ? 'text-rose-400 font-bold' : 'text-slate-500');
+                tbodyItems.innerHTML += `
+                    <tr>
+                        <td class="p-2">${item.no}</td>
+                        <td class="p-2 font-bold text-slate-300">Kolom ${item.kolom}</td>
+                        <td class="p-2 font-bold">${item.jawaban}</td>
+                        <td class="p-2 font-bold text-amber-400">${item.kunci}</td>
+                        <td class="p-2 ${badgeClass}">${item.status.toUpperCase()}</td>
+                        <td class="p-2">${item.waktu}s</td>
+                        <td class="p-2 text-slate-400">${item.keterangan}</td>
+                    </tr>`;
+            });
+
+            renderCharts(report.chartData);
+        }
+
+        function renderCharts(cd) {
+            if (chart1Instance) chart1Instance.destroy();
+            if (chart2Instance) chart2Instance.destroy();
+
+            chart1Instance = new Chart(document.getElementById('chartBlockPerformance').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: cd.blockLabels,
+                    datasets: [
+                        { label: 'Akurasi (%)', data: cd.blockAcc, backgroundColor: 'rgba(245, 158, 11, 0.8)', borderRadius: 6 },
+                        { label: 'Rata Waktu (s)', data: cd.blockTime, backgroundColor: 'rgba(59, 130, 246, 0.8)', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+                    scales: {
+                        x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } },
+                        y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } }
+                    }
+                }
+            });
+
+            chart2Instance = new Chart(document.getElementById('chartRunningAccuracy').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: cd.runningAcc.map((_, i) => i + 1),
+                    datasets: [{
+                        label: 'Running Accuracy (%)',
+                        data: cd.runningAcc,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+                    scales: {
+                        x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } },
+                        y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' }, min: 0, max: 100 }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
